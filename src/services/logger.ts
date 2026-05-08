@@ -21,10 +21,10 @@ export class LoggerService {
       
       child.on("error", (err) => {
         // Silently fail if CLI is not present, but log to console
-        console.warn(`Failed to push log to Google Workspace CLI: ${err.message}`);
+        // console.warn(`Failed to push log to Google Workspace CLI: ${err.message}`);
       });
     } catch (error) {
-      console.error("Error spawning log CLI:", error);
+      // console.error("Error spawning log CLI:", error);
     }
   }
 

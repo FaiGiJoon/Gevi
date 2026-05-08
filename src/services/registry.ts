@@ -1,6 +1,6 @@
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { Manifest, ManifestEntry } from '../types/registry';
+import { Manifest } from '../types/registry';
 import { GameSet, CardFragment } from '../types/card';
 import { calculateHash } from '../utils/crypto';
 
@@ -24,7 +24,13 @@ export class RegistryService {
   async reconcileAssets(directory: string): Promise<Record<string, GameSet>> {
     if (!this.manifest) await this.loadManifest();
 
-    const files = await readdir(directory);
+    let files: string[] = [];
+    try {
+        files = await readdir(directory);
+    } catch (e) {
+        return {};
+    }
+
     const rawFiles = files.filter(f => f.endsWith('.raw'));
     const games: Record<string, GameSet> = {};
 
