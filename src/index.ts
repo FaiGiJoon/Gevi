@@ -2,29 +2,38 @@ import { z } from "zod";
 import { RegistryService } from "./services/registry";
 import { Stitcher } from "./services/stitcher";
 import { logger } from "./services/logger";
+import { PaletteService } from "./services/palette";
+import { DebuggerService } from "./services/debugger";
 
 // Security Layer: Zod schemas for emulator communication
 const CommandSchema = z.object({
-  command: z.enum(["LOAD_GAME", "GET_STATUS", "PING"]),
+  command: z.enum(["LOAD_GAME", "GET_STATUS", "PING", "SET_PALETTE", "GET_PALETTES", "INSPECT_MEMORY", "GET_TILES"]),
   gameId: z.string().optional(),
+  paletteName: z.string().optional(),
+  address: z.number().optional(),
+  length: z.number().optional(),
+  bank: z.number().optional(),
 });
 
 type Command = z.infer<typeof CommandSchema>;
 
-class GEVI {
+export class GEVI {
   private registry: RegistryService;
   private stitcher: Stitcher;
+  private palette: PaletteService;
+  private debugger: DebuggerService;
 
   constructor() {
     const manifestPath = process.env.MANIFEST_PATH || "./manifest.json";
     this.registry = new RegistryService(manifestPath);
     this.stitcher = new Stitcher();
+    this.palette = new PaletteService();
+    this.debugger = new DebuggerService();
   }
 
   async start() {
     await logger.logSystemReady();
     
-    // In a real implementation, this would start a WebSocket or Pipe listener
     console.log("GEVI Middleware started. Waiting for commands...");
 
     // Keep-alive mechanism: keep the process running
@@ -32,9 +41,6 @@ class GEVI {
       console.log("Shutting down GEVI...");
       process.exit(0);
     });
-
-    // Dummy interval to prevent immediate exit
-    setInterval(() => {}, 1000);
   }
 
   /**
@@ -50,16 +56,34 @@ class GEVI {
         return { status: "error", message: "Invalid command structure", details: result.error.format() };
       }
 
-      const { command, gameId } = result.data;
+      const { command, gameId, paletteName, address, length, bank } = result.data;
 
       switch (command) {
         case "LOAD_GAME":
           if (!gameId) throw new Error("gameId is required for LOAD_GAME");
           return await this.loadGame(gameId);
         case "GET_STATUS":
-          return { status: "ok", system: "GEVI", version: "1.0.0" };
+          return {
+              status: "ok",
+              system: "GEVI",
+              version: "1.1.0",
+              currentPalette: this.palette.getCurrentPalette().name
+          };
         case "PING":
           return { status: "ok", message: "PONG" };
+        case "GET_PALETTES":
+          return { status: "success", palettes: this.palette.getPalettes() };
+        case "SET_PALETTE":
+          if (!paletteName) throw new Error("paletteName is required");
+          this.palette.setPalette(paletteName);
+          return { status: "success", palette: this.palette.getCurrentPalette() };
+        case "INSPECT_MEMORY":
+          if (address === undefined || length === undefined) throw new Error("address and length are required");
+          const mem = await this.debugger.inspectMemory(address, length);
+          return { status: "success", data: Array.from(mem) };
+        case "GET_TILES":
+          const tiles = await this.debugger.getTileData(bank ?? 0);
+          return { status: "success", tileData: tiles };
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -88,12 +112,14 @@ class GEVI {
       status: "success",
       gameName: gameSet.gameName,
       payloadSize: payload.length,
-      // In a real scenario, we'd send the payload to the emulator here
     };
   }
+
+  getPaletteService() { return this.palette; }
+  getRegistryService() { return this.registry; }
 }
 
-const gevi = new GEVI();
-gevi.start().catch(console.error);
-
-export { gevi };
+if (import.meta.main) {
+    const gevi = new GEVI();
+    gevi.start().catch(console.error);
+}
