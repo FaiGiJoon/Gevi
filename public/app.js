@@ -14,8 +14,20 @@ function log(message) {
 }
 
 async function checkStatus() {
-    const res = await apiCall('GET_STATUS');
-    log(res);
+    const btn = document.getElementById('refresh-status-btn');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Refreshing...';
+    }
+    try {
+        const res = await apiCall('GET_STATUS');
+        log(res);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Refresh Status';
+        }
+    }
 }
 
 async function loadPalettes() {
@@ -28,7 +40,13 @@ async function loadPalettes() {
         opt.textContent = p;
         select.appendChild(opt);
     });
-    updatePalettePreview();
+
+    // Sync with system state
+    const status = await apiCall('GET_STATUS');
+    if (status && status.currentPalette) {
+        select.value = status.currentPalette;
+    }
+    changePalette();
 }
 
 async function changePalette() {
@@ -49,6 +67,8 @@ function updatePalettePreview(colors) {
         const box = document.createElement('div');
         box.className = 'color-box';
         box.style.backgroundColor = c;
+        box.setAttribute('role', 'img');
+        box.setAttribute('aria-label', `Color: ${c}`);
         preview.appendChild(box);
     });
 }

@@ -83,6 +83,10 @@
             font-size: 0.8rem;
         }
         .status-ok { background-color: #306230; color: #fff; }
+        button:focus-visible, select:focus-visible {
+            outline: 2px solid #9bbc0f;
+            outline-offset: 2px;
+        }
     </style>
 </head>
 <body>
@@ -94,10 +98,11 @@
             <div class="card">
                 <h3>System</h3>
                 <p>Status: <span id="status" class="status-badge status-ok">Connected</span></p>
-                <button onclick="checkStatus()">Refresh Status</button>
+                <button id="refresh-status-btn" onclick="checkStatus()">Refresh Status</button>
             </div>
             <div class="card">
                 <h3>Palette</h3>
+                <label for="palette-select" style="display: block; margin-bottom: 0.5rem;">Select Palette:</label>
                 <select id="palette-select" onchange="changePalette()">
                     <!-- Options populated by JS -->
                 </select>
@@ -112,7 +117,7 @@
         <div id="content">
             <div id="output" class="card">
                 <h3>Output</h3>
-                <pre id="output-log">Welcome to GEVI GUI. System ready.</pre>
+                <pre id="output-log" aria-live="polite">Welcome to GEVI GUI. System ready.</pre>
             </div>
         </div>
     </main>
