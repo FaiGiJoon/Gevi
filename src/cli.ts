@@ -22,6 +22,7 @@ rl.on('line', async (line) => {
       console.log('  palettes         - List available color palettes');
       console.log('  set-palette <id> - Change the color palette');
       console.log('  inspect <addr> <len> - Inspect memory');
+      console.log('  disassemble <addr> <len> - Disassemble memory');
       console.log('  tiles [bank]     - View tile data (mocked)');
       console.log('  load <gameId>    - Load a game from registry');
       console.log('  ping             - Check connection');
@@ -50,6 +51,18 @@ rl.on('line', async (line) => {
       } else {
         console.log(await gevi.handleCommand({
             command: 'INSPECT_MEMORY',
+            address: parseInt(args[0]),
+            length: parseInt(args[1])
+        }));
+      }
+      break;
+
+    case 'disassemble':
+      if (args.length < 2) {
+        console.log('Usage: disassemble <address> <length>');
+      } else {
+        console.log(await gevi.handleCommand({
+            command: 'DISASSEMBLE',
             address: parseInt(args[0]),
             length: parseInt(args[1])
         }));
