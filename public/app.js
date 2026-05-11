@@ -83,6 +83,15 @@ async function inspectMemory() {
     log(res);
 }
 
+async function disassemble() {
+    const res = await apiCall('DISASSEMBLE', { address: 0x0100, length: 8 });
+    if (res.status === 'success') {
+        log("Disassembly:\n" + res.instructions.join('\n'));
+    } else {
+        log(res);
+    }
+}
+
 // Initial load
 loadPalettes();
 checkStatus();

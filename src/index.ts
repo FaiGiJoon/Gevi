@@ -4,10 +4,11 @@ import { Stitcher } from "./services/stitcher";
 import { logger } from "./services/logger";
 import { PaletteService } from "./services/palette";
 import { DebuggerService } from "./services/debugger";
+import { DisassemblerService } from "./services/disassembler";
 
 // Security Layer: Zod schemas for emulator communication
 const CommandSchema = z.object({
-  command: z.enum(["LOAD_GAME", "GET_STATUS", "PING", "SET_PALETTE", "GET_PALETTES", "INSPECT_MEMORY", "GET_TILES"]),
+  command: z.enum(["LOAD_GAME", "GET_STATUS", "PING", "SET_PALETTE", "GET_PALETTES", "INSPECT_MEMORY", "GET_TILES", "DISASSEMBLE"]),
   gameId: z.string().optional(),
   paletteName: z.string().optional(),
   address: z.number().optional(),
@@ -22,6 +23,7 @@ export class GEVI {
   private stitcher: Stitcher;
   private palette: PaletteService;
   private debugger: DebuggerService;
+  private disassembler: DisassemblerService;
 
   constructor() {
     const manifestPath = process.env.MANIFEST_PATH || "./manifest.json";
@@ -29,6 +31,7 @@ export class GEVI {
     this.stitcher = new Stitcher();
     this.palette = new PaletteService();
     this.debugger = new DebuggerService();
+    this.disassembler = new DisassemblerService();
   }
 
   async start() {
@@ -84,6 +87,10 @@ export class GEVI {
         case "GET_TILES":
           const tiles = await this.debugger.getTileData(bank ?? 0);
           return { status: "success", tileData: tiles };
+        case "DISASSEMBLE":
+          if (address === undefined || length === undefined) throw new Error("address and length are required");
+          const instructions = await this.disassembler.disassemble(address, length);
+          return { status: "success", instructions };
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

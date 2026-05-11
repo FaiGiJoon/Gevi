@@ -15,10 +15,11 @@ GEVI is a robust middleware and utility suite designed for Gameboy emulator inte
 
 ## Screenshots
 
-### GUI Overview
-![GUI Overview](https://raw.githubusercontent.com/user-attachments/assets/67890) *(Note: Placeholder link, actual screenshot taken during verification)*
+### Web GUI
+![GUI Overview](assets/gui_overview.png)
 
-<img src="https://raw.githubusercontent.com/user-attachments/assets/67890" width="600" alt="GUI Screenshot">
+### Interactive CLI
+![CLI Overview](assets/cli_overview.png)
 
 ## Installation
 
